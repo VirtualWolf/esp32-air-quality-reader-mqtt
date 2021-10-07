@@ -1,5 +1,6 @@
 import uasyncio as asyncio
 import ujson
+import utime
 from machine import UART
 import ustruct as struct
 import logger
@@ -46,6 +47,9 @@ async def start_readings(client):
 
         logger.log('Turning off UART bus')
         uart.deinit()
+
+        timestamp = (utime.time() + 946684800) * 1000
+        data['timestamp'] = timestamp
 
         json = ujson.dumps(data)
 
