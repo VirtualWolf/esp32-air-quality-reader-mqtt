@@ -1,29 +1,18 @@
+import gc
 import uasyncio as asyncio
 import ujson
 import utime
-from machine import UART
+from machine import UART, WDT
 import ustruct as struct
 import logger
 from config import read_configuration
 
 c = read_configuration()
 
-data = {
-    'pm_1_0': 0,
-    'pm_2_5': 0,
-    'pm_10': 0,
-    'particles_0_3um': 0,
-    'particles_0_5um': 0,
-    'particles_1_0um': 0,
-    'particles_2_5um': 0,
-    'particles_5_0um': 0,
-    'particles_10um': 0,
-}
+wdt = WDT(timeout=600000)
 
 async def start_readings(client):
     while True:
-        global data
-
         logger.log('Initialising UART bus')
         uart = UART(1, 9600)
         uart.init(9600, bits=8, parity=None, rx=16, timeout=250)
@@ -31,7 +20,7 @@ async def start_readings(client):
         count = 0
 
         while count < 30:
-            logger.log('Warming sensor up, reading #%d of 30' % count)
+            # logger.log('Warming sensor up, reading #%d of 30' % count)
             await read_sensor(uart)
             count = count + 1
             await asyncio.sleep(1)
@@ -55,6 +44,8 @@ async def start_readings(client):
 
         await client.publish(c['topic'], json, qos = 1, retain = True)
 
+        wdt.feed()
+
         await asyncio.sleep(180)
 
 async def read_sensor(uart):
@@ -69,6 +60,8 @@ async def read_sensor(uart):
             return
 
         data = list(data)
+
+        gc.collect()
 
         buffer += data
 
@@ -91,6 +84,8 @@ async def read_sensor(uart):
             await read_sensor(uart)
 
         frame_len = struct.unpack(">H", bytes(buffer[2:4]))[0]
+
+        gc.collect()
 
         if frame_len != 28:
             buffer = []
@@ -140,6 +135,3 @@ async def read_sensor(uart):
 
     except Exception as e:
         logger.log(e)
-
-def get_current_data():
-    return data

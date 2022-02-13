@@ -577,7 +577,7 @@ class MQTTClient(MQTT_base):
             count %= 20
             if not count:
                 gc.collect()
-                print('RAM free {} alloc {}'.format(gc.mem_free(), gc.mem_alloc()))
+                # print('RAM free {} alloc {}'.format(gc.mem_free(), gc.mem_alloc()))
 
     def isconnected(self):
         if self._in_connect:  # Disable low-level check during .connect()

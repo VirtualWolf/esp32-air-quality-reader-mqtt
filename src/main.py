@@ -31,7 +31,7 @@ async def main(client):
 config['wifi_coro'] = wifi_handler
 
 # Set up client
-MQTTClient.DEBUG = True  # Optional
+MQTTClient.DEBUG = False
 client = MQTTClient(config)
 
 try:
